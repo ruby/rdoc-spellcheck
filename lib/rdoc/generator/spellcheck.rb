@@ -90,23 +90,27 @@ class RDoc::Generator::Spellcheck
         puts "#{mod.definition} in #{location.full_name}:"
         puts
         misspelled.each do |word, offset|
-          comment.text =~ /.{#{offset - 10}}(.{0,10})#{Regexp.escape word}(.{0,10})/
-
-          before    = $1
-          after     = $2
-          underline = word.chars.map { |char| "_\b#{char}" }.join
-
-          puts "\"...#{$1}#{underline}#{$2}...\""
-          puts
-
-          suggestions = @spell.suggest(word).first 5
-
-          puts "\"#{word}\" suggestions:"
-          puts "\t#{suggestions.join ', '}"
-          puts
+          puts suggestion_text(comment.text, word, offset)
         end
       end
     end
+  end
+
+  def suggestion_text text, word, offset
+    text =~ /.{#{offset - 10}}(.{0,10})#{Regexp.escape word}(.{0,10})/
+
+    before    = $1
+    after     = $2
+    underline = word.chars.map { |char| "_\b#{char}" }.join
+    suggestions = @spell.suggest(word).first 5
+
+    <<-TEXT
+"...#{before}#{underline}#{after}..."
+
+"#{word}" suggestions:
+\t#{suggestions.join ', '}
+
+    TEXT
   end
 
 end
