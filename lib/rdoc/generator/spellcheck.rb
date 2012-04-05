@@ -98,6 +98,10 @@ class RDoc::Generator::Spellcheck
 
   end
 
+  ##
+  # Returns a report of misspellings the +comment+ at +location+ for
+  # documentation item +name+
+
   def misspellings_for name, comment, location
     out = []
 
@@ -115,6 +119,9 @@ class RDoc::Generator::Spellcheck
 
     out
   end
+
+  ##
+  # Creates suggestion text for the misspelled +word+ at +offset+ in +text+
 
   def suggestion_text text, word, offset
     prefix = offset - 10
