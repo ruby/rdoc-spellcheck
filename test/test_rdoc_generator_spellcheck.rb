@@ -93,6 +93,12 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_match %r%^"gud"%,                     out
   end
 
+  def test_misspellings_for_empty
+    out = @sc.misspellings_for 'class Object', comment(''), @top_level
+
+    assert_empty out
+  end
+
   def test_suggestion_text
     out = @sc.suggestion_text @text, 'gud', 28
 
