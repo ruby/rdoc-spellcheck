@@ -1,2 +1,2 @@
-require 'rdoc/spellcheck'
+require 'rdoc/generator/spellcheck'
 
