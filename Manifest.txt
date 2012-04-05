@@ -1,0 +1,8 @@
+.autotest
+History.rdoc
+Manifest.txt
+README.rdoc
+Rakefile
+lib/rdoc/discover.rb
+lib/rdoc/generator/spellcheck.rb
+test/test_rdoc_generator_spellcheck.rb
