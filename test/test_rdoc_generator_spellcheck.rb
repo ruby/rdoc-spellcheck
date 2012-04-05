@@ -70,6 +70,20 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_match %r%^"gud"%,                     out
   end
 
+  def test_generate_correct
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    c = comment 'This class has perfect spelling!'
+    klass.add_comment c, @top_level
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+    assert_equal "No misspellings found\n", out
+  end
+
   def test_suggestion_text
     out = @sc.suggestion_text @text, 'gud', 28
 

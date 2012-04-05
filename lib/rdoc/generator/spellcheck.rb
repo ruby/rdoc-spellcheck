@@ -81,11 +81,15 @@ class RDoc::Generator::Spellcheck
   # Creates the spelling report
 
   def generate files
+    misspellings = 0
+
     RDoc::TopLevel.all_classes_and_modules.each do |mod|
       mod.comment_location.each do |comment, location|
         misspelled = find_misspelled comment
 
         next if misspelled.empty?
+
+        misspellings += misspelled.length
 
         puts "#{mod.definition} in #{location.full_name}:"
         puts
@@ -94,6 +98,8 @@ class RDoc::Generator::Spellcheck
         end
       end
     end
+
+    puts 'No misspellings found' if misspellings.zero?
   end
 
   def suggestion_text text, word, offset
