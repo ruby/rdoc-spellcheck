@@ -100,6 +100,38 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal expected, out
   end
 
+  def test_suggestion_text_start
+    out = @sc.suggestion_text 'gud night world, see you tomorrow', 'gud', 0
+
+    suggestions = suggest('gud').join ', '
+
+    expected = <<-EXPECTED
+"_\bg_\bu_\bd night wor..."
+
+"gud" suggestions:
+\t#{suggestions}
+
+    EXPECTED
+
+    assert_equal expected, out
+  end
+
+  def test_suggestion_text_end
+    out = @sc.suggestion_text 'you did real gud', 'gud', 14
+
+    suggestions = suggest('gud').join ', '
+
+    expected = <<-EXPECTED
+"...did real _\bg_\bu_\bd"
+
+"gud" suggestions:
+\t#{suggestions}
+
+    EXPECTED
+
+    assert_equal expected, out
+  end
+
   def suggest word
     Aspell.new('en_US').suggest(word).first 5
   end

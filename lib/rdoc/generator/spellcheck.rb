@@ -103,15 +103,18 @@ class RDoc::Generator::Spellcheck
   end
 
   def suggestion_text text, word, offset
-    text =~ /.{#{offset - 10}}(.{0,10})#{Regexp.escape word}(.{0,10})/
+    prefix = offset - 10
+    prefix = 0 if prefix < 0
 
-    before    = $1
-    after     = $2
+    text =~ /\A.{#{prefix}}(.{0,10})#{Regexp.escape word}(.{0,10})/
+
+    before    = "#{prefix.zero? ? nil : '...'}#{$1}"
+    after     = "#{$2}#{$2.empty? ? nil : '...'}"
     underline = word.chars.map { |char| "_\b#{char}" }.join
     suggestions = @spell.suggest(word).first 5
 
     <<-TEXT
-"...#{before}#{underline}#{after}..."
+"#{before}#{underline}#{after}"
 
 "#{word}" suggestions:
 \t#{suggestions.join ', '}
