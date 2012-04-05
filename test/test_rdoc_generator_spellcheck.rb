@@ -84,6 +84,15 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal "No misspellings found\n", out
   end
 
+  def test_misspellings_for
+    out = @sc.misspellings_for 'class Object', comment(@text), @top_level
+
+    out = out.join "\n"
+
+    assert_match %r%^class Object in file\.rb:%, out
+    assert_match %r%^"gud"%,                     out
+  end
+
   def test_suggestion_text
     out = @sc.suggestion_text @text, 'gud', 28
 

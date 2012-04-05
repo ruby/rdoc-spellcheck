@@ -58,7 +58,8 @@ class RDoc::Generator::Spellcheck
   def initialize options # :not-new:
     @options = options
 
-    @spell = Aspell.new @options.spell_language
+    @misspellings = 0
+    @spell        = Aspell.new @options.spell_language
   end
 
   ##
@@ -81,25 +82,38 @@ class RDoc::Generator::Spellcheck
   # Creates the spelling report
 
   def generate files
-    misspellings = 0
+    report = []
 
     RDoc::TopLevel.all_classes_and_modules.each do |mod|
       mod.comment_location.each do |comment, location|
-        misspelled = find_misspelled comment
-
-        next if misspelled.empty?
-
-        misspellings += misspelled.length
-
-        puts "#{mod.definition} in #{location.full_name}:"
-        puts
-        misspelled.each do |word, offset|
-          puts suggestion_text(comment.text, word, offset)
-        end
+        report.concat misspellings_for(mod.definition, comment, location)
       end
     end
 
-    puts 'No misspellings found' if misspellings.zero?
+    if @misspellings.zero? then
+      puts 'No misspellings found'
+    else
+      puts report.join "\n"
+    end
+
+  end
+
+  def misspellings_for name, comment, location
+    out = []
+
+    misspelled = find_misspelled comment
+
+    return out if misspelled.empty?
+
+    @misspellings += misspelled.length
+
+    out << "#{name} in #{location.full_name}:"
+    out << nil
+    out.concat misspelled.map { |word, offset|
+      suggestion_text comment.text, word, offset
+    }
+
+    out
   end
 
   def suggestion_text text, word, offset
