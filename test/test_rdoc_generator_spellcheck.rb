@@ -9,6 +9,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   def setup
     super
 
+    @top_level = RDoc::TopLevel.new 'file.rb'
+
     @SC = RDoc::Generator::Spellcheck
     @options = RDoc::Options.new
     @options.spell_language = 'en_US'
@@ -39,19 +41,46 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal 'en_GB', options.spell_language
   end
 
-  def test_generate
-    tl = RDoc::TopLevel.new 'file.rb'
-    klass = tl.add_class RDoc::NormalClass, 'Object'
+  def test_find_misspelled
+    c = comment 'Hello, this class has real gud spelling!'
 
-    comment = RDoc::Comment.new 'Hello, this class has real gud spelling!', tl
-    klass.add_comment comment, tl
+    report = @sc.find_misspelled c
+
+    word, offset = report.shift
+
+    assert_equal 'gud', word
+    assert_equal 28,    offset
+  end
+
+  def test_generate
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    c = comment 'Hello, this class has real gud spelling!'
+    klass.add_comment c, @top_level
 
     out, err = capture_io do
-      @sc.generate [tl]
+      @sc.generate [@top_level]
     end
 
     assert_empty err
-    assert_equal "gud\n", out
+
+    suggestions = suggest('gud').join ', '
+
+    expected = <<-EXPECTED
+class Object in file.rb:
+
+"...has real _\bg_\bu_\bd spelling!..."
+
+"gud" suggestions:
+\t#{suggestions}
+
+    EXPECTED
+
+    assert_equal expected, out
+  end
+
+  def suggest word
+    Aspell.new('en_US').suggest(word).first 5
   end
 
 end

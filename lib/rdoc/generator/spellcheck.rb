@@ -62,15 +62,48 @@ class RDoc::Generator::Spellcheck
   end
 
   ##
+  # Returns a report of misspelled words in +comment+.  The report contains
+  # each misspelled word and its offset in the comment's text.
+
+  def find_misspelled comment
+    report = []
+
+    comment.text.scan(/[a-z_]+/i) do |word|
+      next if @spell.check word
+
+      report << [word, $`.length + 1]
+    end
+
+    report
+  end
+
+  ##
   # Creates the spelling report
 
   def generate files
     RDoc::TopLevel.all_classes_and_modules.each do |mod|
       mod.comment_location.each do |comment, location|
-        comment.text.scan(/[a-z_]+/i) do |word|
-          next if @spell.check word
+        misspelled = find_misspelled comment
 
-          puts word
+        next if misspelled.empty?
+
+        puts "#{mod.definition} in #{location.full_name}:"
+        puts
+        misspelled.each do |word, offset|
+          comment.text =~ /.{#{offset - 10}}(.{0,10})#{Regexp.escape word}(.{0,10})/
+
+          before    = $1
+          after     = $2
+          underline = word.chars.map { |char| "_\b#{char}" }.join
+
+          puts "\"...#{$1}#{underline}#{$2}...\""
+          puts
+
+          suggestions = @spell.suggest(word).first 5
+
+          puts "\"#{word}\" suggestions:"
+          puts "\t#{suggestions.join ', '}"
+          puts
         end
       end
     end
