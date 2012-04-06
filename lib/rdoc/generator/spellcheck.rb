@@ -30,6 +30,7 @@ class RDoc::Generator::Spellcheck
     GPL
     VCS
     XHTML
+    ary
     cpp
     dev
     erb
@@ -39,6 +40,8 @@ class RDoc::Generator::Spellcheck
     inlining
     iso
     ivar
+    klass
+    lang
     lookup
     newb
     perl
@@ -52,6 +55,7 @@ class RDoc::Generator::Spellcheck
     unmaintained
     utf
     validator
+    www
     yacc
   ]
 
