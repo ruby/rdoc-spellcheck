@@ -156,10 +156,13 @@ class RDoc::Generator::Spellcheck
   def find_misspelled comment
     report = []
 
-    comment.text.scan(/[a-z]+/i) do |word|
+    comment.text.scan(/[a-z][a-z']+[a-z]/i) do |word|
+      offset = $`.length # store
+
+      word = $` if word =~ /'s$/i
+
       next if @spell.check word
 
-      offset = $`.length
       offset = offset.zero? ? 0 : offset + 1
 
       report << [word, offset]

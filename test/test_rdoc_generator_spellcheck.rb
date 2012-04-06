@@ -141,6 +141,26 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal 28,    offset
   end
 
+  def test_find_misspelled_quote
+    c = comment "doesn't"
+
+    report = @sc.find_misspelled c
+
+    assert_empty report
+
+    c = comment "'quoted'"
+
+    report = @sc.find_misspelled c
+
+    assert_empty report
+
+    c = comment "other's"
+
+    report = @sc.find_misspelled c
+
+    assert_empty report
+  end
+
   def test_find_misspelled_underscore
     c = comment 'gud_method'
 
