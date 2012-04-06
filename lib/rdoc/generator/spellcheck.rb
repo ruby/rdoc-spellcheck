@@ -110,10 +110,15 @@ class RDoc::Generator::Spellcheck
       end
 
       mod.each_method do |meth|
-        comment = meth.comment
-        location = meth.file
+        report.concat misspellings_for(meth.full_name, meth.comment, meth.file)
+      end
 
-        report.concat misspellings_for(meth.full_name, comment, location)
+      aliases = mod.aliases + mod.external_aliases
+
+      aliases.each do |alas|
+        name = "Object alias #{alas.old_name} #{alas.new_name}"
+
+        report.concat misspellings_for(name, alas.comment, alas.file)
       end
     end
 

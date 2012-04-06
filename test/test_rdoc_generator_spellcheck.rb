@@ -70,6 +70,29 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_match %r%^"gud"%,                     out
   end
 
+  def test_generate_alias
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    meth = RDoc::AnyMethod.new nil, 'new'
+    meth.comment = comment ''
+    meth.record_location @top_level
+
+    klass.add_method meth
+    alas = RDoc::Alias.new nil, 'old', 'new', comment(@text)
+    alas.record_location @top_level
+
+    klass.add_alias alas
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^Object alias old new in file\.rb:%, out
+    assert_match %r%^"gud"%,                                    out
+  end
+
   def test_generate_attribute
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
