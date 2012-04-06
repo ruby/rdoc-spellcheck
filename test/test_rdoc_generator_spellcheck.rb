@@ -208,29 +208,6 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     end
   end
 
-  def test_generate_alias
-    klass = @top_level.add_class RDoc::NormalClass, 'Object'
-
-    meth = RDoc::AnyMethod.new nil, 'new'
-    meth.comment = comment ''
-    meth.record_location @top_level
-
-    klass.add_method meth
-    alas = RDoc::Alias.new nil, 'old', 'new', comment(@text)
-    alas.record_location @top_level
-
-    klass.add_alias alas
-
-    out, err = capture_io do
-      @sc.generate [@top_level]
-    end
-
-    assert_empty err
-
-    assert_match %r%^Object alias old new in #{@escaped_path}:%, out
-    assert_match %r%^"gud"%,                                     out
-  end
-
   def test_generate_attribute
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
@@ -404,6 +381,22 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     end
   end
 
+  def test_location_of_include
+    Tempfile.open 'location_of' do |io|
+      io.puts "##"
+      io.puts "# Here is some text with proper spelling"
+      io.puts "#"
+      io.puts "# :include: other.rdoc"
+      io.flush
+
+      tl = RDoc::TopLevel.new io.path
+      text = "Here is some text with proper spelling\n\n#{@text}"
+      offset = text.index "gud"
+
+      assert_nil @sc.location_of text, offset, tl
+    end
+  end
+
   def test_misspellings_for
     out = @sc.misspellings_for 'class Object', comment(@text), @top_level
 
@@ -421,23 +414,24 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_empty out
   end
 
-  def test_setup_dictionary_alias
-    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+  def test_misspellings_for_include
+    Tempfile.open 'other' do |io|
+      io.write "# :include: original.txt"
+      io.flush
 
-    meth = RDoc::AnyMethod.new nil, 'new'
-    meth.comment = comment ''
-    meth.record_location @top_level
+      tl = RDoc::TopLevel.new io.path
 
-    klass.add_method meth
-    alas = RDoc::Alias.new nil, 'funkify_thingus', 'new', comment(@text)
-    alas.record_location @top_level
+      out = @sc.misspellings_for 'class Object', comment(@text), tl
 
-    klass.add_alias alas
+      out = out.join "\n"
 
-    @sc.setup_dictionary
+      include_location = Regexp.escape tl.absolute_name
+      source_location = Regexp.escape @top_level.absolute_name
 
-    assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
-    assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
+      assert_match %r%^class Object in #{include_location}%, out
+      assert_match %r%^\(via include\)%,                     out
+      assert_match %r%^"gud"%,                               out
+    end
   end
 
   def test_setup_dictionary_attribute

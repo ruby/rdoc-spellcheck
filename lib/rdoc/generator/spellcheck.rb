@@ -397,14 +397,6 @@ class RDoc::Generator::Spellcheck
       mod.each_method do |meth|
         report.concat misspellings_for(meth.full_name, meth.comment, meth.file)
       end
-
-      aliases = mod.aliases + mod.external_aliases
-
-      aliases.each do |alas|
-        name = "Object alias #{alas.old_name} #{alas.new_name}"
-
-        report.concat misspellings_for(name, alas.comment, alas.file)
-      end
     end
 
     RDoc::TopLevel.all_files.each do |file|
@@ -452,7 +444,9 @@ class RDoc::Generator::Spellcheck
       end
     end
 
-    raise "[bug] Unable to find #{line_text} in #{file.absolute_name}"
+    # TODO typos in include file
+
+    nil
   end
 
   ##
@@ -477,11 +471,14 @@ class RDoc::Generator::Spellcheck
     out << nil
 
     out.concat misspelled.flat_map { |word, offset|
+      suggestion = suggestion_text comment.text, word, offset
       line, column = location_of word, offset, location
-      [
-        "#{location.absolute_name}:#{line}:#{column}",
-        suggestion_text(comment.text, word, offset),
-      ]
+
+      if line then
+        ["#{location.absolute_name}:#{line}:#{column}", suggestion]
+      else
+        ["(via include)", suggestion]
+      end
     }
 
     out
@@ -515,13 +512,6 @@ class RDoc::Generator::Spellcheck
         add_name meth.name
         add_name meth.params       if meth.params
         add_name meth.block_params if meth.block_params
-      end
-
-      aliases = mod.aliases + mod.external_aliases
-
-      aliases.each do |alas|
-        add_name alas.old_name
-        add_name alas.new_name
       end
     end
 
