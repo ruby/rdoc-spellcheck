@@ -1,7 +1,9 @@
 require 'rubygems'
 require 'minitest/autorun'
 
-require 'rdoc/generator/spellcheck'
+gem 'rdoc', '~> 3.12'
+
+require 'rdoc' # automatically requires rdoc/generator/spell_check
 require 'rdoc/test_case'
 
 class TestRDocGeneratorSpellcheck < RDoc::TestCase
@@ -38,6 +40,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_equal 'en_US', options.spell_language
     assert                options.quiet
+  ensure
+    ENV['LANG'] = orig_lang
   end
 
   def test_class_setup_options_spell_language

@@ -1,10 +1,3 @@
-require 'rubygems'
-
-gem 'rdoc', '~> 3.12'
-
-require 'rdoc'
-require 'rdoc/generator'
-
 require 'raspell'
 
 ##
