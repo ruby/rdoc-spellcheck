@@ -120,6 +120,24 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal "No misspellings found\n", out
   end
 
+  def test_generate_include
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    incl = RDoc::Include.new 'INCLUDE', comment(@text)
+    incl.record_location @top_level
+
+    klass.add_include incl
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^Object\.include INCLUDE in file\.rb:%, out
+    assert_match %r%^"gud"%,                      out
+  end
+
   def test_generate_method
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
