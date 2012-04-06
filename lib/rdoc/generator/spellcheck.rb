@@ -60,7 +60,10 @@ class RDoc::Generator::Spellcheck
     @options = options
 
     @misspellings = 0
-    @spell        = Aspell.new @options.spell_language
+
+    @spell = Aspell.new @options.spell_language
+    @spell.suggestion_mode = Aspell::NORMAL
+    @spell.set_option 'run-together', 'true'
   end
 
   ##
