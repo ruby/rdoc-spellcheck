@@ -191,7 +191,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
       word, offset = report.shift
 
       assert_equal 'gud', word
-      assert_equal 0,    offset
+      assert_equal 0,     offset
     end
   end
 
@@ -201,7 +201,10 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
       report = @sc.find_misspelled c
 
-      assert_empty report
+      word, offset = report.shift
+
+      assert_equal 'Gülker', word
+      assert_equal 8,        offset
     end
   end
 
@@ -601,6 +604,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     Tempfile.open 'personal_wordlist' do |wordlist|
       Tempfile.open 'personal_repl' do |repl|
         ENV['ASPELL_CONF'] = "personal #{wordlist.path};repl #{repl.path}"
+
+        @sc = @SC.new @options
 
         yield
       end
