@@ -31,6 +31,18 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal 'en_US', options.spell_language
   end
 
+  def test_class_setup_options_default
+    orig_lang = ENV['LANG']
+    ENV['LANG'] = 'en_US.UTF-8'
+
+    options = RDoc::Options.new
+
+    options.parse %w[--format spellcheck]
+
+    assert_equal 'en_US', options.spell_language
+    assert                options.quiet
+  end
+
   def test_class_setup_options_spell_language
     options = RDoc::Options.new
 
@@ -215,7 +227,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     suggestions = suggest('gud').join ', '
 
     expected = <<-EXPECTED
-"...has real _\bg_\bu_\bd spelling!..."
+"...has real \e[1;31mgud\e[m spelling!..."
 
 "gud" suggestions:
 \t#{suggestions}
@@ -231,7 +243,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     suggestions = suggest('gud').join ', '
 
     expected = <<-EXPECTED
-"...did real _\bg_\bu_\bd"
+"...did real \e[1;31mgud\e[m"
 
 "gud" suggestions:
 \t#{suggestions}
@@ -248,7 +260,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     suggestions = suggest('secnd').join ', '
 
     expected = <<-EXPECTED
-"...o\non the _\bs_\be_\bc_\bn_\bd line"
+"...o\non the \e[1;31msecnd\e[m line"
 
 "secnd" suggestions:
 \t#{suggestions}
@@ -264,7 +276,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     suggestions = suggest('gud').join ', '
 
     expected = <<-EXPECTED
-"_\bg_\bu_\bd night wor..."
+"\e[1;31mgud\e[m night wor..."
 
 "gud" suggestions:
 \t#{suggestions}

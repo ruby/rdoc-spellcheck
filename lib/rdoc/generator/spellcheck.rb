@@ -34,6 +34,7 @@ class RDoc::Generator::Spellcheck
     default_language, = ENV['LANG'].split '.'
 
     options.spell_language = default_language
+    options.quiet          = true # suppress statistics
 
     op = options.option_parser
 
@@ -172,11 +173,13 @@ class RDoc::Generator::Spellcheck
 
     before    = "#{prefix.zero? ? nil : '...'}#{$1}"
     after     = "#{$2}#{$2.length < 10 ? nil : '...'}"
-    underline = word.chars.map { |char| "_\b#{char}" }.join
+
+    highlight = "\e[1;31m#{word}\e[m"
+
     suggestions = @spell.suggest(word).first 5
 
     <<-TEXT
-"#{before}#{underline}#{after}"
+"#{before}#{highlight}#{after}"
 
 "#{word}" suggestions:
 \t#{suggestions.join ', '}
