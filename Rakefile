@@ -14,6 +14,7 @@ Hoe.spec 'rdoc-spellcheck' do
     'docs.seattlerb.org:/data/www/docs.seattlerb.org/rdoc-spellcheck/'
 
   dependency 'raspell', '~> 1.3'
+  dependency 'rdoc',    '~> 3.12'
 end
 
 # vim: syntax=ruby
