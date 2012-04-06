@@ -84,6 +84,25 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal "No misspellings found\n", out
   end
 
+  def test_generate_method
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    meth = RDoc::AnyMethod.new nil, 'method'
+    meth.record_location @top_level
+    meth.comment = comment @text, meth
+
+    klass.add_method meth
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^Object#method in file\.rb:%, out
+    assert_match %r%^"gud"%,                      out
+  end
+
   def test_misspellings_for
     out = @sc.misspellings_for 'class Object', comment(@text), @top_level
 

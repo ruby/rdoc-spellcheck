@@ -88,6 +88,13 @@ class RDoc::Generator::Spellcheck
       mod.comment_location.each do |comment, location|
         report.concat misspellings_for(mod.definition, comment, location)
       end
+
+      mod.each_method do |method|
+        comment = method.comment
+        location = method.file
+
+        report.concat misspellings_for(method.full_name, comment, location)
+      end
     end
 
     if @misspellings.zero? then
@@ -95,7 +102,6 @@ class RDoc::Generator::Spellcheck
     else
       puts report.join "\n"
     end
-
   end
 
   ##
