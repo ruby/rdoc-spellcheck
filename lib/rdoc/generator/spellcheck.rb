@@ -22,11 +22,37 @@ class RDoc::Generator::Spellcheck
   # Please keep this list sorted in your pull requests
 
   DEFAULT_WORDS = %w[
+    API
+    ARGF
+    BOM
+    CRLF
+    ENV
+    GPL
+    VCS
+    XHTML
+    cpp
+    dev
+    erb
+    gsub
     http
     https
+    inlining
+    iso
+    ivar
+    lookup
     newb
+    perl
+    stderr
+    stdin
+    stdout
+    succ
     sudo
+    txt
+    uniq
+    unmaintained
+    utf
     validator
+    yacc
   ]
 
   ##
