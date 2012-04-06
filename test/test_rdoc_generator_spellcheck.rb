@@ -54,22 +54,6 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal 28,    offset
   end
 
-  def test_generate
-    klass = @top_level.add_class RDoc::NormalClass, 'Object'
-
-    c = comment @text
-    klass.add_comment c, @top_level
-
-    out, err = capture_io do
-      @sc.generate [@top_level]
-    end
-
-    assert_empty err
-
-    assert_match %r%^class Object in file\.rb:%, out
-    assert_match %r%^"gud"%,                     out
-  end
-
   def test_generate_alias
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
@@ -111,6 +95,22 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_match %r%^"gud"%,                                    out
   end
 
+  def test_generate_class
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    c = comment @text
+    klass.add_comment c, @top_level
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^class Object in file\.rb:%, out
+    assert_match %r%^"gud"%,                     out
+  end
+
   def test_generate_constant
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
@@ -141,6 +141,20 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
     assert_equal "No misspellings found\n", out
+  end
+
+  def test_generate_file
+    @top_level.comment = comment @text
+    @top_level.parser = RDoc::Parser::Text
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^In file\.rb:%, out # actual file name would be different
+    assert_match %r%^"gud"%,     out
   end
 
   def test_generate_include

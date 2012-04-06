@@ -122,6 +122,10 @@ class RDoc::Generator::Spellcheck
       end
     end
 
+    RDoc::TopLevel.all_files.each do |file|
+      report.concat misspellings_for(nil, file.comment, file)
+    end
+
     if @misspellings.zero? then
       puts 'No misspellings found'
     else
@@ -136,13 +140,19 @@ class RDoc::Generator::Spellcheck
   def misspellings_for name, comment, location
     out = []
 
+    return out if comment.empty?
+
     misspelled = find_misspelled comment
 
     return out if misspelled.empty?
 
     @misspellings += misspelled.length
 
-    out << "#{name} in #{location.full_name}:"
+    if name then
+      out << "#{name} in #{location.full_name}:"
+    else
+      out << "In #{location.full_name}:"
+    end
     out << nil
     out.concat misspelled.map { |word, offset|
       suggestion_text comment.text, word, offset
