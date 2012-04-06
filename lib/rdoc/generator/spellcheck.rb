@@ -23,38 +23,217 @@ class RDoc::Generator::Spellcheck
 
   DEFAULT_WORDS = %w[
     API
-    ARGF
-    BOM
-    CRLF
-    ENV
+    ArgumentError
+    CGI
+    EOFError
+    ERb
+    Encoding::CompatibilityError
+    Encoding::ConverterNotFoundError
+    Encoding::InvalidByteSequenceError
+    Encoding::UndefinedConversionError
+    EncodingError
+    Errno::E2BIG
+    Errno::EACCES
+    Errno::EADDRINUSE
+    Errno::EADDRNOTAVAIL
+    Errno::EAFNOSUPPORT
+    Errno::EAGAIN
+    Errno::EALREADY
+    Errno::EAUTH
+    Errno::EBADF
+    Errno::EBADMSG
+    Errno::EBADRPC
+    Errno::EBUSY
+    Errno::ECANCELED
+    Errno::ECHILD
+    Errno::ECONNABORTED
+    Errno::ECONNREFUSED
+    Errno::ECONNRESET
+    Errno::EDEADLK
+    Errno::EDESTADDRREQ
+    Errno::EDOM
+    Errno::EDQUOT
+    Errno::EEXIST
+    Errno::EFAULT
+    Errno::EFBIG
+    Errno::EFTYPE
+    Errno::EHOSTDOWN
+    Errno::EHOSTUNREACH
+    Errno::EIDRM
+    Errno::EILSEQ
+    Errno::EINPROGRESS
+    Errno::EINTR
+    Errno::EINVAL
+    Errno::EIO
+    Errno::EISCONN
+    Errno::EISDIR
+    Errno::ELOOP
+    Errno::EMFILE
+    Errno::EMLINK
+    Errno::EMSGSIZE
+    Errno::EMULTIHOP
+    Errno::ENAMETOOLONG
+    Errno::ENEEDAUTH
+    Errno::ENETDOWN
+    Errno::ENETRESET
+    Errno::ENETUNREACH
+    Errno::ENFILE
+    Errno::ENOATTR
+    Errno::ENOBUFS
+    Errno::ENODATA
+    Errno::ENODEV
+    Errno::ENOENT
+    Errno::ENOEXEC
+    Errno::ENOLCK
+    Errno::ENOLINK
+    Errno::ENOMEM
+    Errno::ENOMSG
+    Errno::ENOPROTOOPT
+    Errno::ENOSPC
+    Errno::ENOSR
+    Errno::ENOSTR
+    Errno::ENOSYS
+    Errno::ENOTBLK
+    Errno::ENOTCONN
+    Errno::ENOTDIR
+    Errno::ENOTEMPTY
+    Errno::ENOTRECOVERABLE
+    Errno::ENOTSOCK
+    Errno::ENOTSUP
+    Errno::ENOTTY
+    Errno::ENXIO
+    Errno::EOPNOTSUPP
+    Errno::EOVERFLOW
+    Errno::EOWNERDEAD
+    Errno::EPERM
+    Errno::EPFNOSUPPORT
+    Errno::EPIPE
+    Errno::EPROCLIM
+    Errno::EPROCUNAVAIL
+    Errno::EPROGMISMATCH
+    Errno::EPROGUNAVAIL
+    Errno::EPROTO
+    Errno::EPROTONOSUPPORT
+    Errno::EPROTOTYPE
+    Errno::ERANGE
+    Errno::EREMOTE
+    Errno::EROFS
+    Errno::ERPCMISMATCH
+    Errno::ESHUTDOWN
+    Errno::ESOCKTNOSUPPORT
+    Errno::ESPIPE
+    Errno::ESRCH
+    Errno::ESTALE
+    Errno::ETIME
+    Errno::ETIMEDOUT
+    Errno::ETOOMANYREFS
+    Errno::ETXTBSY
+    Errno::EUSERS
+    Errno::EXDEV
+    Errno::NOERROR
+    Exception
+    FIXME
+    FiberError
+    FileUtils
+    FloatDomainError
     GPL
+    IOError
+    IndexError
+    Interrupt
+    KeyError
+    LoadError
+    LocalJumpError
+    Math::DomainError
+    NUL
+    NameError
+    NoMemoryError
+    NoMethodError
+    NoMethodError
+    NotImplementedError
+    PHP
+    README
+    RangeError
+    RegexpError
+    RuntimeError
+    ScriptError
+    SecurityError
+    SignalException
+    StandardError
+    StopIteration
+    StringIO
+    SyntaxError
+    SystemCallError
+    SystemExit
+    SystemStackError
+    ThreadError
+    TypeError
+    URI
     VCS
     XHTML
+    ZeroDivisionError
+    Zlib
+    accessor
+    accessors
+    argf
+    argv
     ary
+    baz
+    bom
+    cfg
     cpp
+    crlf
+    deprecations
     dev
+    dup
+    emacs
+    env
     erb
+    globals
     gsub
     http
     https
+    img
     inlining
+    instantiation
+    irb
     iso
     ivar
+    kbd
     klass
+    klasses
     lang
+    lexing
     lookup
+    lossy
+    mailto
+    mktmpdir
     newb
     perl
+    popup
+    pwd
+    racc
+    rbw
+    refactor
+    refactored
     stderr
     stdin
     stdout
+    struct
     succ
     sudo
+    tmpdir
+    tokenizer
+    tokenizes
     txt
+    unescape
+    unescapes
     uniq
     unmaintained
+    unordered
     utf
     validator
+    validators
+    visibilities
     www
     yacc
   ]
@@ -273,7 +452,7 @@ class RDoc::Generator::Spellcheck
 
   def setup_dictionary
     DEFAULT_WORDS.each do |word|
-      @spell.add_to_session word
+      add_name word
     end
 
     RDoc::TopLevel.all_classes_and_modules.each do |mod|
@@ -293,6 +472,8 @@ class RDoc::Generator::Spellcheck
 
       mod.each_method do |meth|
         add_name meth.name
+        add_name meth.params       if meth.params
+        add_name meth.block_params if meth.block_params
       end
 
       aliases = mod.aliases + mod.external_aliases

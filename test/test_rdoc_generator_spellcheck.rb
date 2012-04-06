@@ -443,6 +443,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
     meth = RDoc::AnyMethod.new nil, 'funkify_thingus'
+    meth.block_params = 'foo, bar'
+    meth.params       = 'baz, hoge'
     meth.record_location @top_level
     meth.comment = comment @text, meth
 
@@ -452,6 +454,11 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
     assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
+
+    assert @sc.spell.check('foo'),     'foo not added to wordlist'
+    assert @sc.spell.check('bar'),     'bar not added to wordlist'
+    assert @sc.spell.check('baz'),     'baz not added to wordlist'
+    assert @sc.spell.check('hoge'),    'hoge not added to wordlist'
   end
 
   def test_suggestion_text
