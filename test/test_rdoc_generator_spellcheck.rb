@@ -292,6 +292,14 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert @sc.spell.check('THINGUS'), 'THINGUS not added to wordlist'
   end
 
+  def test_setup_dictionary_defaults
+    @sc.setup_dictionary
+
+    word = RDoc::Generator::Spellcheck::DEFAULT_WORDS.first
+
+    assert @sc.spell.check(word), "#{word} not added to wordlist"
+  end
+
   def test_setup_dictionary_file
     RDoc::TopLevel.new 'funkify_thingus.rb'
 

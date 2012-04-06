@@ -16,6 +16,19 @@ class RDoc::Generator::Spellcheck
   VERSION = '1.0'
 
   ##
+  # A list of common words that aspell may not include, but are commonly used
+  # in ruby programs.
+  #--
+  # Please keep this list sorted in your pull requests
+
+  DEFAULT_WORDS = %w[
+    https
+    newb
+    sudo
+    validator
+  ]
+
+  ##
   # OptionParser validator for Aspell language dictionaries
 
   SpellLanguage = Object.new
@@ -180,8 +193,12 @@ class RDoc::Generator::Spellcheck
   # documentation tree to the session spelling dictionary.
 
   def setup_dictionary
+    DEFAULT_WORDS.each do |word|
+      @spell.add_to_session word
+    end
+
     RDoc::TopLevel.all_classes_and_modules.each do |mod|
-      @spell.add_to_session mod.name
+      add_name mod.name
 
       mod.each_include do |incl|
         add_name incl.name
