@@ -1,3 +1,5 @@
+# coding: UTF-8
+
 require 'rubygems'
 require 'minitest/autorun'
 require 'stringio'
@@ -130,6 +132,12 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert true # just for counting
   end
 
+  def test_add_name_utf_8
+    @sc.add_name 'Володя'
+
+    assert true # just for counting
+  end
+
   def test_find_misspelled
     c = comment @text
 
@@ -170,6 +178,14 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_equal 'gud', word
     assert_equal 0,    offset
+  end
+
+  def test_find_misspelled_utf_8
+    c = comment 'Marvin Gülker'
+
+    report = @sc.find_misspelled c
+
+    assert_empty report
   end
 
   def test_generate_alias

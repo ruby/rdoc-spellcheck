@@ -1,3 +1,5 @@
+# coding: UTF-8
+
 require 'raspell'
 
 ##
@@ -213,8 +215,10 @@ class RDoc::Generator::Spellcheck
     pwd
     racc
     rbw
+    redistributions
     refactor
     refactored
+    startup
     stderr
     stdin
     stdout
@@ -230,6 +234,7 @@ class RDoc::Generator::Spellcheck
     uniq
     unmaintained
     unordered
+    untrusted
     utf
     validator
     validators
@@ -305,7 +310,8 @@ class RDoc::Generator::Spellcheck
 
     @misspellings = Hash.new 0
 
-    @spell = Aspell.new @options.spell_language
+    encoding_name = @options.encoding.name
+    @spell = Aspell.new @options.spell_language, nil, nil, encoding_name
     @spell.suggestion_mode = Aspell::NORMAL
     @spell.set_option 'run-together', 'true'
 
@@ -335,7 +341,7 @@ class RDoc::Generator::Spellcheck
   def find_misspelled comment
     report = []
 
-    comment.text.scan(/[a-z][a-z']+[a-z]/i) do |word|
+    comment.text.scan(/\p{L}[\p{L}']+\p{L}/i) do |word|
       offset = $`.length # store
 
       word = $` if word =~ /'s$/i
