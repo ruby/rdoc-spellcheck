@@ -120,7 +120,7 @@ class RDoc::Generator::Spellcheck
   def initialize options # :not-new:
     @options = options
 
-    @misspellings = 0
+    @misspellings = Hash.new 0
 
     @spell = Aspell.new @options.spell_language
     @spell.suggestion_mode = Aspell::NORMAL
@@ -159,6 +159,8 @@ class RDoc::Generator::Spellcheck
       offset = offset.zero? ? 0 : offset + 1
 
       report << [word, offset]
+
+      @misspellings[word] += 1
     end
 
     report
@@ -214,10 +216,21 @@ class RDoc::Generator::Spellcheck
       report.concat misspellings_for(nil, file.comment, file)
     end
 
-    if @misspellings.zero? then
+    if @misspellings.empty? then
       puts 'No misspellings found'
     else
       puts report.join "\n"
+      puts
+
+      num_width = @misspellings.values.max.to_s.length
+      order = @misspellings.sort_by do |word, count|
+        [-count, word]
+      end
+
+      puts 'Top misspellings:'
+      order.first(10).each do |word, count|
+        puts "%*d %s" % [num_width, count, word]
+      end
     end
   end
 
@@ -233,8 +246,6 @@ class RDoc::Generator::Spellcheck
     misspelled = find_misspelled comment
 
     return out if misspelled.empty?
-
-    @misspellings += misspelled.length
 
     if name then
       out << "#{name} in #{location.full_name}:"

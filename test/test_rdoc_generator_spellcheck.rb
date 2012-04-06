@@ -292,6 +292,28 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_match %r%^"gud"%,                                 out
   end
 
+  def test_generate_multiple
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+    c = comment @text
+    klass.add_comment c, @top_level
+
+    meth = RDoc::AnyMethod.new nil, 'method'
+    meth.record_location @top_level
+    meth.comment = comment @text, meth
+
+    klass.add_method meth
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^Object#method in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                 out
+    assert_match %r%^2 gud%,                                 out
+  end
+
   def test_misspellings_for
     out = @sc.misspellings_for 'class Object', comment(@text), @top_level
 
