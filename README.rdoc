@@ -6,19 +6,22 @@ bugs :: https://github.com/drbrain/rdoc-spellcheck/issues
 
 == Description
 
-FIX (describe your package)
+rdoc-spellcheck checks your documentation for spelling errors.
 
 == Features and Problems
 
-* FIX (list of features or problems)
+* Checks documentation for pages, classes, modules, methods, constants, etc.
+* Prints a report showing each misspelled word and correction suggestions
 
 == Synopsis
 
-  FIX (code sample of usage)
+  $ rdoc -f spellcheck lib *.rdoc
 
 == Requirements
 
-* FIX (list of requirements)
+* rdoc
+* libaspell -- See https://github.com/evan/raspell/blob/master/README.rdoc for
+  installation instructions for aspell
 
 == Install
 
@@ -37,7 +40,7 @@ and generate the RDoc.
 
 (The MIT License)
 
-Copyright (c) FIX
+Copyright (c) Eric Hodel
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
