@@ -89,6 +89,17 @@ class RDoc::Generator::Spellcheck
         report.concat misspellings_for(mod.definition, comment, location)
       end
 
+      mod.each_constant do |constant|
+        comment = constant.comment
+        location = constant.file
+
+        # TODO add missing RDoc::Constant#full_name
+        name = constant.parent ? constant.parent.full_name : '(unknown)'
+        name = "#{name}::#{constant.name}"
+
+        report.concat misspellings_for(name, comment, location)
+      end
+
       mod.each_method do |method|
         comment = method.comment
         location = method.file

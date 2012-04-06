@@ -70,6 +70,24 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_match %r%^"gud"%,                     out
   end
 
+  def test_generate_constant
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    const = RDoc::Constant.new 'CONSTANT', nil, comment(@text)
+    const.record_location @top_level
+
+    klass.add_constant const
+
+    out, err = capture_io do
+      @sc.generate [@top_level]
+    end
+
+    assert_empty err
+
+    assert_match %r%^Object::CONSTANT in file\.rb:%, out
+    assert_match %r%^"gud"%,                      out
+  end
+
   def test_generate_correct
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
