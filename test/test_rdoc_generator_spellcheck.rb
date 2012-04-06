@@ -225,13 +225,13 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal expected, out
   end
 
-  def test_suggestion_text_start
-    out = @sc.suggestion_text 'gud night world, see you tomorrow', 'gud', 0
+  def test_suggestion_text_end
+    out = @sc.suggestion_text 'you did real gud', 'gud', 14
 
     suggestions = suggest('gud').join ', '
 
     expected = <<-EXPECTED
-"_\bg_\bu_\bd night wor..."
+"...did real _\bg_\bu_\bd"
 
 "gud" suggestions:
 \t#{suggestions}
@@ -241,13 +241,30 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal expected, out
   end
 
-  def test_suggestion_text_end
-    out = @sc.suggestion_text 'you did real gud', 'gud', 14
+  def test_suggestion_text_newline
+    text = "This text has a typo\non the secnd line"
+    out = @sc.suggestion_text text, 'secnd', 29
+
+    suggestions = suggest('secnd').join ', '
+
+    expected = <<-EXPECTED
+"...o\non the _\bs_\be_\bc_\bn_\bd line"
+
+"secnd" suggestions:
+\t#{suggestions}
+
+    EXPECTED
+
+    assert_equal expected, out
+  end
+
+  def test_suggestion_text_start
+    out = @sc.suggestion_text 'gud night world, see you tomorrow', 'gud', 0
 
     suggestions = suggest('gud').join ', '
 
     expected = <<-EXPECTED
-"...did real _\bg_\bu_\bd"
+"_\bg_\bu_\bd night wor..."
 
 "gud" suggestions:
 \t#{suggestions}

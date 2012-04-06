@@ -168,10 +168,10 @@ class RDoc::Generator::Spellcheck
     prefix = offset - 10
     prefix = 0 if prefix < 0
 
-    text =~ /\A.{#{prefix}}(.{0,10})#{Regexp.escape word}(.{0,10})/
+    text =~ /\A.{#{prefix}}(.{0,10})#{Regexp.escape word}(.{0,10})/m
 
     before    = "#{prefix.zero? ? nil : '...'}#{$1}"
-    after     = "#{$2}#{$2.empty? ? nil : '...'}"
+    after     = "#{$2}#{$2.length < 10 ? nil : '...'}"
     underline = word.chars.map { |char| "_\b#{char}" }.join
     suggestions = @spell.suggest(word).first 5
 
