@@ -100,6 +100,15 @@ class RDoc::Generator::Spellcheck
         report.concat misspellings_for(name, comment, location)
       end
 
+      mod.each_attribute do |attr|
+        comment = attr.comment
+        location = attr.file
+
+        name = "#{attr.parent.full_name}.#{attr.definition} :#{attr.name}"
+
+        report.concat misspellings_for(name, comment, location)
+      end
+
       mod.each_method do |method|
         comment = method.comment
         location = method.file
