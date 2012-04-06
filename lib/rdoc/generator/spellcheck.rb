@@ -22,6 +22,7 @@ class RDoc::Generator::Spellcheck
   # Please keep this list sorted in your pull requests
 
   DEFAULT_WORDS = %w[
+    http
     https
     newb
     sudo
@@ -41,8 +42,9 @@ class RDoc::Generator::Spellcheck
   def self.setup_options options
     default_language, = ENV['LANG'].split '.'
 
-    options.spell_language = default_language
-    options.quiet          = true # suppress statistics
+    options.spell_add_words = false
+    options.spell_language  = default_language
+    options.quiet           = true # suppress statistics
 
     op = options.option_parser
 
@@ -57,8 +59,33 @@ class RDoc::Generator::Spellcheck
       language
     end
 
+    op.separator nil
+    op.separator 'Spellcheck options:'
+    op.separator nil
+
+    op.on('--spell-add-words [WORDLIST]',
+          'Adds words to the aspell personal wordlist.',
+          'The word list may be a comma-separated',
+          'list of words which must contain multiple',
+          'words, a file or empty to read words from',
+          'stdin') do |wordlist|
+      words = if wordlist.nil? then
+                $stdin.read.split
+              elsif wordlist =~ /,/ then
+                wordlist.split ','
+              else
+                open wordlist do |io|
+                  io.read.split
+                end
+              end
+
+      options.spell_add_words = words
+    end
+
+    op.separator nil
+
     op.on('--spell-language=LANGUAGE', SpellLanguage,
-          'Language to use for spell checking',
+          'Language to use for spell checking.',
           "The default language is #{default_language}") do |language|
       options.spell_language = language
     end
@@ -72,6 +99,14 @@ class RDoc::Generator::Spellcheck
     @spell = Aspell.new @options.spell_language
     @spell.suggestion_mode = Aspell::NORMAL
     @spell.set_option 'run-together', 'true'
+
+    if words = @options.spell_add_words then
+      words.each do |word|
+        @spell.add_to_personal word
+      end
+
+      @spell.save_all_word_lists
+    end
   end
 
   ##
@@ -259,6 +294,11 @@ class RDoc::Generator::Spellcheck
 end
 
 class RDoc::Options
+
+  ##
+  # Enables addition of words to the personal wordlist
+
+  attr_accessor :spell_add_words
 
   ##
   # The Aspell dictionary language to use.  Defaults to the language in the

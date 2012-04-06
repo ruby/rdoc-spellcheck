@@ -1,5 +1,7 @@
 require 'rubygems'
 require 'minitest/autorun'
+require 'stringio'
+require 'tempfile'
 
 gem 'rdoc', '~> 3.12'
 
@@ -38,10 +40,56 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     options.parse %w[--format spellcheck]
 
+    refute                options.spell_add_words
     assert_equal 'en_US', options.spell_language
     assert                options.quiet
   ensure
     ENV['LANG'] = orig_lang
+  end
+
+  def test_class_setup_options_spell_add_words
+    $stdin = StringIO.new "foo bar\nbaz"
+
+    options = RDoc::Options.new
+
+    options.parse %w[
+      --format spellcheck
+      --no-ignore-invalid
+      --spell-add-words
+    ]
+
+    assert_equal %w[foo bar baz], options.spell_add_words
+  ensure
+    $stdin = STDIN
+  end
+
+  def test_class_setup_options_spell_add_words_list
+    options = RDoc::Options.new
+
+    options.parse %w[
+      --format spellcheck
+      --no-ignore-invalid
+      --spell-add-words foo,bar
+    ]
+
+    assert_equal %w[foo bar], options.spell_add_words
+  end
+
+  def test_class_setup_options_spell_add_words_file
+    Tempfile.open 'words.txt' do |io|
+      io.write "foo bar\nbaz"
+      io.rewind
+
+      options = RDoc::Options.new
+
+      options.parse %W[
+        --format spellcheck
+        --no-ignore-invalid
+        --spell-add-words #{io.path}
+      ]
+
+      assert_equal %w[foo bar baz], options.spell_add_words
+    end
   end
 
   def test_class_setup_options_spell_language
@@ -54,6 +102,26 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     ]
 
     assert_equal 'en_GB', options.spell_language
+  end
+
+  def test_initialize_add_words
+    orig_aspell_conf = ENV['ASPELL_CONF']
+
+    Tempfile.open 'personal_wordlist' do |wordlist|
+      Tempfile.open 'personal_repl' do |repl|
+        ENV['ASPELL_CONF'] = "personal #{wordlist.path};repl #{repl.path}"
+        @options.spell_add_words = %w[funkify thingus]
+
+        sc = @SC.new @options
+
+        spell = Aspell.new 'en_US'
+
+        assert spell.check('funkify'), 'funkify not added to personal wordlist'
+        assert spell.check('thingus'), 'thingus not added to personal wordlist'
+      end
+    end
+  ensure
+    ENV['ASPELL_CONF'] = orig_aspell_conf
   end
 
   def test_find_misspelled
