@@ -2,7 +2,8 @@
 after_script:
 - rake travis:after -t
 before_script:
-- apt-get install aspell libaspell-dev aspell-en
+- sudo apt-get update
+- sudo apt-get install aspell libaspell-dev aspell-en
 - gem install hoe-travis --no-rdoc --no-ri
 - rake travis:before -t
 language: ruby
