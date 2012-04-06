@@ -60,11 +60,24 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     options.parse %w[--format spellcheck]
 
     refute                options.spell_add_words
+    refute                options.spell_aggregate_all
     assert_equal 'en_US', options.spell_language
     assert_equal Dir.pwd, options.spell_source_dir
     assert                options.quiet
   ensure
     ENV['LANG'] = orig_lang
+  end
+
+  def test_class_setup_options_spell_aggregate_all
+    options = RDoc::Options.new
+
+    options.parse %w[
+      --format spellcheck
+      --no-ignore-invalid
+      --spell-aggregate-all
+    ]
+
+    assert options.spell_aggregate_all
   end
 
   def test_class_setup_options_spell_add_words

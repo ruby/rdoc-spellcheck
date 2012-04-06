@@ -187,7 +187,10 @@ class RDoc::Generator::Spellcheck
     deprecations
     dev
     dup
+    elsif
     emacs
+    encodings
+    endian
     env
     erb
     globals
@@ -209,11 +212,13 @@ class RDoc::Generator::Spellcheck
     lossy
     mailto
     mktmpdir
+    natively
     newb
     perl
     popup
     pwd
     racc
+    radix
     rbw
     redistributions
     refactor
@@ -299,6 +304,13 @@ class RDoc::Generator::Spellcheck
 
     op.separator nil
 
+    op.on('--[no-]spell-aggregate-all',
+          'Show aggregate counts for all misspellings.') do |aggregate_all|
+      options.spell_aggregate_all = aggregate_all
+    end
+
+    op.separator nil
+
     op.on('--spell-language=LANGUAGE', SpellLanguage,
           'Language to use for spell checking.',
           "The default language is #{default_language}") do |language|
@@ -309,8 +321,9 @@ class RDoc::Generator::Spellcheck
   def initialize options # :not-new:
     @options = options
 
-    @encoding   = @options.encoding
-    @source_dir = @options.spell_source_dir
+    @encoding      = @options.encoding
+    @source_dir    = @options.spell_source_dir
+    @aggregate_all = @options.spell_aggregate_all
 
     @misspellings = Hash.new 0
 
@@ -414,8 +427,10 @@ class RDoc::Generator::Spellcheck
         [-count, word]
       end
 
-      puts 'Top misspellings:'
-      order.first(10).each do |word, count|
+      order = order.first 10 unless @aggregate_all
+
+      puts 'Aggregate misspellings:'
+      order.each do |word, count|
         puts "%*d %s" % [num_width, count, word]
       end
     end
@@ -562,6 +577,11 @@ class RDoc::Options
   # Enables addition of words to the personal wordlist
 
   attr_accessor :spell_add_words
+
+  ##
+  # Display all found misspellings instead of the top ten.
+
+  attr_accessor :spell_aggregate_all
 
   ##
   # The Aspell dictionary language to use.  Defaults to the language in the
