@@ -6,9 +6,11 @@ bugs :: https://github.com/drbrain/rdoc-spellcheck/issues
 
 == Description
 
-rdoc-spellcheck checks your documentation for spelling errors.
+rdoc-spellcheck checks your documentation for spelling errors.  File, class,
+and method names are automatically excluded from the results and you can add
+your own words to the default word list.
 
-== Features and Problems
+== Features
 
 * Checks documentation for pages, classes, modules, methods, constants, etc.
 * Prints a report showing each misspelled word and correction suggestions
