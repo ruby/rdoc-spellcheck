@@ -256,9 +256,10 @@ class RDoc::Generator::Spellcheck
   def self.setup_options options
     default_language, = ENV['LANG'].split '.'
 
-    options.spell_add_words = false
-    options.spell_language  = default_language
-    options.quiet           = true # suppress statistics
+    options.spell_add_words  = false
+    options.spell_language   = default_language
+    options.spell_source_dir = Dir.pwd
+    options.quiet            = true # suppress statistics
 
     op = options.option_parser
 
@@ -308,10 +309,12 @@ class RDoc::Generator::Spellcheck
   def initialize options # :not-new:
     @options = options
 
+    @encoding   = @options.encoding
+    @source_dir = @options.spell_source_dir
+
     @misspellings = Hash.new 0
 
-    encoding_name = @options.encoding.name
-    @spell = Aspell.new @options.spell_language, nil, nil, encoding_name
+    @spell = Aspell.new @options.spell_language, nil, nil, @encoding.name
     @spell.suggestion_mode = Aspell::NORMAL
     @spell.set_option 'run-together', 'true'
 
@@ -427,6 +430,32 @@ class RDoc::Generator::Spellcheck
   end
 
   ##
+  # Determines the line and column of the misspelling in +comment+ at +offset+
+  # in the +file+.
+
+  def location_of text, offset, file
+    last_newline = text[0, offset].rindex "\n"
+    start_of_line = last_newline ? last_newline + 1 : 0
+
+    line_text = text[start_of_line..offset]
+
+    full_path = File.expand_path file.absolute_name, @source_dir
+
+    file_content = RDoc::Encoding.read_file full_path, @encoding
+
+    raise "[bug] Unable to read #{full_path}" unless file_content
+
+    file_content.each_line.with_index do |line, index|
+      if line =~ /#{Regexp.escape line_text}/ then
+        column = $`.length + line_text.length
+        return index, column
+      end
+    end
+
+    raise "[bug] Unable to find #{line_text} in #{file.absolute_name}"
+  end
+
+  ##
   # Returns a report of misspellings the +comment+ at +location+ for
   # documentation item +name+
 
@@ -444,9 +473,15 @@ class RDoc::Generator::Spellcheck
     else
       out << "In #{location.full_name}:"
     end
+
     out << nil
-    out.concat misspelled.map { |word, offset|
-      suggestion_text comment.text, word, offset
+
+    out.concat misspelled.flat_map { |word, offset|
+      line, column = location_of word, offset, location
+      [
+        "#{location.absolute_name}:#{line}:#{column}",
+        suggestion_text(comment.text, word, offset),
+      ]
     }
 
     out
@@ -520,6 +555,13 @@ class RDoc::Generator::Spellcheck
 \t#{suggestions.join ', '}
 
     TEXT
+  rescue => e
+    $stderr.puts "[bug] #{e.class}: #{e.message}"
+    $stderr.puts
+    $stderr.puts "word:   #{word}"
+    $stderr.puts "offset: #{offset}"
+    $stderr.puts ">>>> start text <<<<\n#{text}\n>>>>> end text <<<<<"
+    raise
   end
 
 end
@@ -536,6 +578,11 @@ class RDoc::Options
   # LANG environment variable.
 
   attr_accessor :spell_language
+
+  ##
+  # The directory spellcheck was run from which contains all the source files.
+
+  attr_accessor :spell_source_dir
 
 end
 

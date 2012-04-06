@@ -15,9 +15,6 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   def setup
     super
 
-    @top_level = RDoc::TopLevel.new 'funkify_thingus.rb'
-    @top_level.comment = comment 'funkify_thingus'
-
     @SC = RDoc::Generator::Spellcheck
     @options = RDoc::Options.new
     @options.spell_language = 'en_US'
@@ -25,6 +22,26 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     @sc = @SC.new @options
 
     @text = 'Hello, this class has real gud spelling!'
+
+    @tempfile = Tempfile.new __name__
+    @tempfile.puts "# #{@text}"
+    @tempfile.puts
+    @tempfile.puts "# funkify thingus"
+    @tempfile.flush
+
+    @escaped_path = Regexp.escape @tempfile.path
+
+    @top_level = RDoc::TopLevel.new @tempfile.path
+    @top_level.comment = comment 'funkify_thingus'
+
+    method = RDoc::AnyMethod.new nil, 'funkify_thingus'
+    @top_level.add_method method
+  end
+
+  def teardown
+    @tempfile.close
+
+    super
   end
 
   def test_add_name
@@ -44,6 +61,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     refute                options.spell_add_words
     assert_equal 'en_US', options.spell_language
+    assert_equal Dir.pwd, options.spell_source_dir
     assert                options.quiet
   ensure
     ENV['LANG'] = orig_lang
@@ -107,23 +125,16 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   end
 
   def test_initialize_add_words
-    orig_aspell_conf = ENV['ASPELL_CONF']
+    private_wordlist do
+      @options.spell_add_words = %w[funkify thingus]
 
-    Tempfile.open 'personal_wordlist' do |wordlist|
-      Tempfile.open 'personal_repl' do |repl|
-        ENV['ASPELL_CONF'] = "personal #{wordlist.path};repl #{repl.path}"
-        @options.spell_add_words = %w[funkify thingus]
+      sc = @SC.new @options
 
-        sc = @SC.new @options
+      spell = Aspell.new 'en_US'
 
-        spell = Aspell.new 'en_US'
-
-        assert spell.check('funkify'), 'funkify not added to personal wordlist'
-        assert spell.check('thingus'), 'thingus not added to personal wordlist'
-      end
+      assert spell.check('funkify'), 'funkify not added to personal wordlist'
+      assert spell.check('thingus'), 'thingus not added to personal wordlist'
     end
-  ensure
-    ENV['ASPELL_CONF'] = orig_aspell_conf
   end
 
   def test_add_name
@@ -139,14 +150,16 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   end
 
   def test_find_misspelled
-    c = comment @text
+    private_wordlist do
+      c = comment @text
 
-    report = @sc.find_misspelled c
+      report = @sc.find_misspelled c
 
-    word, offset = report.shift
+      word, offset = report.shift
 
-    assert_equal 'gud', word
-    assert_equal 28,    offset
+      assert_equal 'gud', word
+      assert_equal 28,    offset
+    end
   end
 
   def test_find_misspelled_quote
@@ -170,22 +183,26 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   end
 
   def test_find_misspelled_underscore
-    c = comment 'gud_method'
+    private_wordlist do
+      c = comment 'gud_method'
 
-    report = @sc.find_misspelled c
+      report = @sc.find_misspelled c
 
-    word, offset = report.shift
+      word, offset = report.shift
 
-    assert_equal 'gud', word
-    assert_equal 0,    offset
+      assert_equal 'gud', word
+      assert_equal 0,    offset
+    end
   end
 
   def test_find_misspelled_utf_8
-    c = comment 'Marvin Gülker'
+    private_wordlist do
+      c = comment 'Marvin Gülker'
 
-    report = @sc.find_misspelled c
+      report = @sc.find_misspelled c
 
-    assert_empty report
+      assert_empty report
+    end
   end
 
   def test_generate_alias
@@ -207,8 +224,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object alias old new in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                        out
+    assert_match %r%^Object alias old new in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                                     out
   end
 
   def test_generate_attribute
@@ -225,8 +242,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object\.attr_accessor :attr in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                               out
+    assert_match %r%^Object\.attr_accessor :attr in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                                            out
   end
 
   def test_generate_class
@@ -241,8 +258,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^class Object in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                out
+    assert_match %r%^class Object in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                             out
   end
 
   def test_generate_constant
@@ -259,8 +276,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object::CONSTANT in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                    out
+    assert_match %r%^Object::CONSTANT in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                                 out
   end
 
   def test_generate_correct
@@ -287,8 +304,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^In funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                   out
+    assert_match %r%^In #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                out
   end
 
   def test_generate_include
@@ -305,8 +322,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object\.include INCLUDE in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                           out
+    assert_match %r%^Object\.include INCLUDE in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                                        out
   end
 
   def test_generate_method
@@ -324,8 +341,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object#method in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                 out
+    assert_match %r%^Object#method in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                              out
   end
 
   def test_generate_multiple
@@ -345,9 +362,43 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object#method in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                 out
-    assert_match %r%^2 gud%,                                 out
+    assert_match %r%^Object#method in #{@escaped_path}:%, out
+    assert_match %r%^"gud"%,                              out
+    assert_match %r%^2 gud%,                              out
+  end
+
+  def test_location_of
+    Tempfile.open 'location_of' do |io|
+      io.puts "##"
+      io.puts "# Here is some text with proper spelling"
+      io.puts "#"
+      io.puts "# #{@text}"
+      io.flush
+
+      tl = RDoc::TopLevel.new io.path
+      text = "Here is some text with proper spelling\n\n#{@text}"
+      offset = text.index "gud"
+
+      line, column = @sc.location_of text, offset, tl
+
+      assert_equal 3,  line
+      assert_equal 30, column
+    end
+  end
+
+  def test_location_of_first_line
+    Tempfile.open 'location_of' do |io|
+      io.puts "# #{@text}"
+      io.flush
+
+      tl = RDoc::TopLevel.new io.path
+      offset = @text.index "gud"
+
+      line, column = @sc.location_of @text, offset, tl
+
+      assert_equal 0,  line
+      assert_equal 30, column
+    end
   end
 
   def test_misspellings_for
@@ -355,8 +406,10 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     out = out.join "\n"
 
-    assert_match %r%^class Object in funkify_thingus\.rb:%, out
-    assert_match %r%^"gud"%,                                out
+    location = Regexp.escape @top_level.absolute_name
+    assert_match %r%^class Object in #{location}%, out
+    assert_match %r%^#{location}:0:32%,            out
+    assert_match %r%^"gud"%,                       out
   end
 
   def test_misspellings_for_empty
@@ -458,7 +511,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   def test_setup_dictionary_method
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
-    meth = RDoc::AnyMethod.new nil, 'funkify_thingus'
+    meth = RDoc::AnyMethod.new nil, 'bagas_methd'
     meth.block_params = 'foo, bar'
     meth.params       = 'baz, hoge'
     meth.record_location @top_level
@@ -468,13 +521,13 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     @sc.setup_dictionary
 
-    assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
-    assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
+    assert @sc.spell.check('bagas'),  'bagas not added to wordlist'
+    assert @sc.spell.check('methd'),  'methd not added to wordlist'
 
-    assert @sc.spell.check('foo'),     'foo not added to wordlist'
-    assert @sc.spell.check('bar'),     'bar not added to wordlist'
-    assert @sc.spell.check('baz'),     'baz not added to wordlist'
-    assert @sc.spell.check('hoge'),    'hoge not added to wordlist'
+    assert @sc.spell.check('foo'),    'foo not added to wordlist'
+    assert @sc.spell.check('bar'),    'bar not added to wordlist'
+    assert @sc.spell.check('baz'),    'baz not added to wordlist'
+    assert @sc.spell.check('hoge'),   'hoge not added to wordlist'
   end
 
   def test_suggestion_text
@@ -540,6 +593,20 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     EXPECTED
 
     assert_equal expected, out
+  end
+
+  def private_wordlist
+    orig_aspell_conf = ENV['ASPELL_CONF']
+
+    Tempfile.open 'personal_wordlist' do |wordlist|
+      Tempfile.open 'personal_repl' do |repl|
+        ENV['ASPELL_CONF'] = "personal #{wordlist.path};repl #{repl.path}"
+
+        yield
+      end
+    end
+  ensure
+    ENV['ASPELL_CONF'] = orig_aspell_conf
   end
 
   def suggest word
