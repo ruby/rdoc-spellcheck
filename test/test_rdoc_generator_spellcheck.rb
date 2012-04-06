@@ -9,7 +9,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
   def setup
     super
 
-    @top_level = RDoc::TopLevel.new 'file.rb'
+    @top_level = RDoc::TopLevel.new 'funkify_thingus.rb'
+    @top_level.comment = comment 'funkify_thingus'
 
     @SC = RDoc::Generator::Spellcheck
     @options = RDoc::Options.new
@@ -18,6 +19,13 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     @sc = @SC.new @options
 
     @text = 'Hello, this class has real gud spelling!'
+  end
+
+  def test_add_name
+    @sc.add_name 'funkify_thingus'
+
+    assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
+    assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
   end
 
   def test_class_setup_options_default
@@ -66,6 +74,17 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal 28,    offset
   end
 
+  def test_find_misspelled_underscore
+    c = comment 'gud_method'
+
+    report = @sc.find_misspelled c
+
+    word, offset = report.shift
+
+    assert_equal 'gud', word
+    assert_equal 0,    offset
+  end
+
   def test_generate_alias
     klass = @top_level.add_class RDoc::NormalClass, 'Object'
 
@@ -85,8 +104,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object alias old new in file\.rb:%, out
-    assert_match %r%^"gud"%,                                    out
+    assert_match %r%^Object alias old new in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                        out
   end
 
   def test_generate_attribute
@@ -103,8 +122,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object\.attr_accessor :attr in file\.rb:%, out
-    assert_match %r%^"gud"%,                                    out
+    assert_match %r%^Object\.attr_accessor :attr in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                               out
   end
 
   def test_generate_class
@@ -119,8 +138,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^class Object in file\.rb:%, out
-    assert_match %r%^"gud"%,                     out
+    assert_match %r%^class Object in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                out
   end
 
   def test_generate_constant
@@ -137,8 +156,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object::CONSTANT in file\.rb:%, out
-    assert_match %r%^"gud"%,                      out
+    assert_match %r%^Object::CONSTANT in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                    out
   end
 
   def test_generate_correct
@@ -165,8 +184,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^In file\.rb:%, out # actual file name would be different
-    assert_match %r%^"gud"%,     out
+    assert_match %r%^In funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                   out
   end
 
   def test_generate_include
@@ -183,8 +202,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object\.include INCLUDE in file\.rb:%, out
-    assert_match %r%^"gud"%,                      out
+    assert_match %r%^Object\.include INCLUDE in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                           out
   end
 
   def test_generate_method
@@ -202,8 +221,8 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     assert_empty err
 
-    assert_match %r%^Object#method in file\.rb:%, out
-    assert_match %r%^"gud"%,                      out
+    assert_match %r%^Object#method in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                 out
   end
 
   def test_misspellings_for
@@ -211,14 +230,111 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     out = out.join "\n"
 
-    assert_match %r%^class Object in file\.rb:%, out
-    assert_match %r%^"gud"%,                     out
+    assert_match %r%^class Object in funkify_thingus\.rb:%, out
+    assert_match %r%^"gud"%,                                out
   end
 
   def test_misspellings_for_empty
     out = @sc.misspellings_for 'class Object', comment(''), @top_level
 
     assert_empty out
+  end
+
+  def test_setup_dictionary_alias
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    meth = RDoc::AnyMethod.new nil, 'new'
+    meth.comment = comment ''
+    meth.record_location @top_level
+
+    klass.add_method meth
+    alas = RDoc::Alias.new nil, 'funkify_thingus', 'new', comment(@text)
+    alas.record_location @top_level
+
+    klass.add_alias alas
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
+    assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
+  end
+
+  def test_setup_dictionary_attribute
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    attribute = RDoc::Attr.new nil, 'funkify_thingus', 'RW', comment(@text)
+    attribute.record_location @top_level
+
+    klass.add_attribute attribute
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('FUNKIFY'), 'FUNKIFY not added to wordlist'
+    assert @sc.spell.check('THINGUS'), 'THINGUS not added to wordlist'
+  end
+
+  def test_setup_dictionary_class
+    klass = @top_level.add_class RDoc::NormalClass, 'FunkifyThingus'
+
+    c = comment @text
+    klass.add_comment c, @top_level
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('FunkifyThingus'),
+           'FunkifyThingus not added to wordlist'
+  end
+
+  def test_setup_dictionary_constant
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    const = RDoc::Constant.new 'FUNKIFY_THINGUS', nil, comment(@text)
+    const.record_location @top_level
+
+    klass.add_constant const
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('FUNKIFY'), 'FUNKIFY not added to wordlist'
+    assert @sc.spell.check('THINGUS'), 'THINGUS not added to wordlist'
+  end
+
+  def test_setup_dictionary_file
+    RDoc::TopLevel.new 'funkify_thingus.rb'
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
+    assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
+  end
+
+  def test_setup_dictionary_include
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    incl = RDoc::Include.new 'FUNKIFY_THINGUS', comment(@text)
+    incl.record_location @top_level
+
+    klass.add_include incl
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('FUNKIFY'), 'FUNKIFY not added to wordlist'
+    assert @sc.spell.check('THINGUS'), 'THINGUS not added to wordlist'
+  end
+
+  def test_setup_dictionary_method
+    klass = @top_level.add_class RDoc::NormalClass, 'Object'
+
+    meth = RDoc::AnyMethod.new nil, 'funkify_thingus'
+    meth.record_location @top_level
+    meth.comment = comment @text, meth
+
+    klass.add_method meth
+
+    @sc.setup_dictionary
+
+    assert @sc.spell.check('funkify'), 'funkify not added to wordlist'
+    assert @sc.spell.check('thingus'), 'thingus not added to wordlist'
   end
 
   def test_suggestion_text

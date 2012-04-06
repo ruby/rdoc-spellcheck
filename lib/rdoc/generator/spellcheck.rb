@@ -27,6 +27,8 @@ class RDoc::Generator::Spellcheck
 
   SpellLanguage = Object.new
 
+  attr_reader :spell # :nodoc:
+
   ##
   # Adds rdoc-spellcheck options to the rdoc command
 
@@ -67,16 +69,29 @@ class RDoc::Generator::Spellcheck
   end
 
   ##
+  # Adds +name+ to the dictionary, splitting the word on '_' (a character
+  # Aspell does not allow)
+
+  def add_name name
+    name.split('_').each do |part|
+      @spell.add_to_session part
+    end
+  end
+
+  ##
   # Returns a report of misspelled words in +comment+.  The report contains
   # each misspelled word and its offset in the comment's text.
 
   def find_misspelled comment
     report = []
 
-    comment.text.scan(/[a-z_]+/i) do |word|
+    comment.text.scan(/[a-z]+/i) do |word|
       next if @spell.check word
 
-      report << [word, $`.length + 1]
+      offset = $`.length
+      offset = offset.zero? ? 0 : offset + 1
+
+      report << [word, offset]
     end
 
     report
@@ -86,6 +101,8 @@ class RDoc::Generator::Spellcheck
   # Creates the spelling report
 
   def generate files
+    setup_dictionary
+
     report = []
 
     RDoc::TopLevel.all_classes_and_modules.each do |mod|
@@ -163,6 +180,45 @@ class RDoc::Generator::Spellcheck
     }
 
     out
+  end
+
+  ##
+  # Adds file names, class names, module names, method names, etc. from the
+  # documentation tree to the session spelling dictionary.
+
+  def setup_dictionary
+    RDoc::TopLevel.all_classes_and_modules.each do |mod|
+      @spell.add_to_session mod.name
+
+      mod.each_include do |incl|
+        add_name incl.name
+      end
+
+      mod.each_constant do |const|
+        add_name const.name
+      end
+
+      mod.each_attribute do |attr|
+        add_name attr.name
+      end
+
+      mod.each_method do |meth|
+        add_name meth.name
+      end
+
+      aliases = mod.aliases + mod.external_aliases
+
+      aliases.each do |alas|
+        add_name alas.old_name
+        add_name alas.new_name
+      end
+    end
+
+    RDoc::TopLevel.all_files.each do |file|
+      file.absolute_name.split(%r%[/\\.]%).each do |part|
+        add_name part
+      end
+    end
   end
 
   ##
