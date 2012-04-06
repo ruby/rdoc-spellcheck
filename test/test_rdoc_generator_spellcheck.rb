@@ -124,6 +124,12 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     ENV['ASPELL_CONF'] = orig_aspell_conf
   end
 
+  def test_add_name
+    @sc.add_name '<=>'
+
+    assert true # just for counting
+  end
+
   def test_find_misspelled
     c = comment @text
 

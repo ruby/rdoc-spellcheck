@@ -114,7 +114,7 @@ class RDoc::Generator::Spellcheck
   # Aspell does not allow)
 
   def add_name name
-    name.split('_').each do |part|
+    name.scan(/[a-z]+/i) do |part|
       @spell.add_to_session part
     end
   end
