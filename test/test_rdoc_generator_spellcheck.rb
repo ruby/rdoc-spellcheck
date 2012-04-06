@@ -37,17 +37,6 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     options.parse %w[--format spellcheck]
 
     assert_equal 'en_US', options.spell_language
-  end
-
-  def test_class_setup_options_default
-    orig_lang = ENV['LANG']
-    ENV['LANG'] = 'en_US.UTF-8'
-
-    options = RDoc::Options.new
-
-    options.parse %w[--format spellcheck]
-
-    assert_equal 'en_US', options.spell_language
     assert                options.quiet
   end
 
