@@ -27,6 +27,8 @@ class RDoc::Generator::Spellcheck
     API
     ArgumentError
     CGI
+    DES
+    ECDSA
     EOFError
     ERb
     Encoding::CompatibilityError
@@ -135,28 +137,72 @@ class RDoc::Generator::Spellcheck
     Errno::NOERROR
     Exception
     FIXME
+    FQDN
     FiberError
     FileUtils
     FloatDomainError
     GPL
+    IETF
     IOError
     IndexError
     Interrupt
     KeyError
     LoadError
     LocalJumpError
+    MSDN
     Math::DomainError
+    NTFS
     NUL
     NameError
     NoMemoryError
     NoMethodError
     NoMethodError
     NotImplementedError
+    O'Reilly
     PHP
+    PNG
+    POSIX
+    PRNG
     README
     RangeError
     RegexpError
     RuntimeError
+    SIGABRT
+    SIGALRM
+    SIGBUS
+    SIGCHLD
+    SIGCLD
+    SIGCONT
+    SIGEMT
+    SIGEXIT
+    SIGFPE
+    SIGHUP
+    SIGILL
+    SIGINFO
+    SIGINT
+    SIGIO
+    SIGIOT
+    SIGKILL
+    SIGPIPE
+    SIGPROF
+    SIGQUIT
+    SIGSEGV
+    SIGSTOP
+    SIGSYS
+    SIGTERM
+    SIGTRAP
+    SIGTSTP
+    SIGTTIN
+    SIGTTOU
+    SIGURG
+    SIGUSR1
+    SIGUSR2
+    SIGVTALRM
+    SIGWINCH
+    SIGXCPU
+    SIGXFSZ
+    SMTP
+    SMTPS
     ScriptError
     SecurityError
     SignalException
@@ -170,7 +216,9 @@ class RDoc::Generator::Spellcheck
     ThreadError
     TypeError
     URI
+    UUCP
     VCS
+    Wikipedia
     XHTML
     ZeroDivisionError
     Zlib
@@ -179,25 +227,53 @@ class RDoc::Generator::Spellcheck
     argf
     argv
     ary
+    authenticators
     baz
     bom
+    bzip
+    canonicalization
     cfg
     cpp
     crlf
+    cryptographic
+    csh
+    daemonizing
+    decrypt
+    decrypted
+    decrypter
+    decrypting
+    decrypts
     deprecations
+    dereferenced
+    deserialization
+    deserialize
+    deserialized
+    deserializes
+    deserializing
     dev
+    druby
+    dRuby
     dup
+    duplexed
     elsif
     emacs
     encodings
+    encrypter
     endian
     env
     erb
+    finalized
+    finalizer
+    finalizers
     globals
     gsub
+    gzip
+    gzipped
     http
     https
     img
+    incrementing
+    initializer
     inlining
     instantiation
     irb
@@ -211,18 +287,29 @@ class RDoc::Generator::Spellcheck
     lookup
     lossy
     mailto
+    matz
     mktmpdir
     natively
     newb
+    nonces
     perl
     popup
+    proleptic
+    proxied
     pwd
     racc
+    radian
+    radians
     radix
     rbw
     redistributions
     refactor
     refactored
+    reinitializes
+    resized
+    rhtml
+    rsync
+    serializable
     startup
     stderr
     stdin
@@ -234,15 +321,21 @@ class RDoc::Generator::Spellcheck
     tokenizer
     tokenizes
     txt
+    unbuffered
     unescape
     unescapes
     uniq
     unmaintained
+    unmarshal
+    unmarshalled
+    unmarshalling
     unordered
+    untagged
     untrusted
     utf
     validator
     validators
+    versioning
     visibilities
     www
     yacc
@@ -253,6 +346,8 @@ class RDoc::Generator::Spellcheck
 
   SpellLanguage = Object.new
 
+  attr_accessor :minimum_word_length # :nodoc:
+
   attr_reader :spell # :nodoc:
 
   ##
@@ -261,10 +356,11 @@ class RDoc::Generator::Spellcheck
   def self.setup_options options
     default_language, = ENV['LANG'].split '.'
 
-    options.spell_add_words  = false
-    options.spell_language   = default_language
-    options.spell_source_dir = Dir.pwd
-    options.quiet            = true # suppress statistics
+    options.spell_add_words           = false
+    options.spell_language            = default_language
+    options.spell_minimum_word_length = 4
+    options.spell_source_dir          = Dir.pwd
+    options.quiet                     = true # suppress statistics
 
     op = options.option_parser
 
@@ -316,14 +412,23 @@ class RDoc::Generator::Spellcheck
           "The default language is #{default_language}") do |language|
       options.spell_language = language
     end
+
+    op.separator nil
+
+    op.on('--spell-minimum-word-length=LENGTH', Integer,
+          'Minimum length of a word to spell check.',
+          "The default is #{options.spell_minimum_word_length}") do |length|
+      options.spell_minimum_word_length = length
+    end
   end
 
   def initialize options # :not-new:
     @options = options
 
-    @encoding      = @options.encoding
-    @source_dir    = @options.spell_source_dir
-    @aggregate_all = @options.spell_aggregate_all
+    @encoding            = @options.encoding
+    @aggregate_all       = @options.spell_aggregate_all
+    @minimum_word_length = @options.spell_minimum_word_length
+    @source_dir          = @options.spell_source_dir
 
     @misspellings = Hash.new 0
 
@@ -358,6 +463,7 @@ class RDoc::Generator::Spellcheck
     report = []
 
     comment.text.scan(/\p{L}[\p{L}']+\p{L}/i) do |word|
+      next if $&.length < @minimum_word_length
       offset = $`.length # store
 
       word = $` if word =~ /'s$/i
@@ -433,6 +539,11 @@ class RDoc::Generator::Spellcheck
       order.each do |word, count|
         puts "%*d %s" % [num_width, count, word]
       end
+
+      total = @misspellings.values.inject :+
+
+      puts
+      puts "Total misspellings: #{total}"
     end
   end
 
@@ -588,6 +699,11 @@ class RDoc::Options
   # LANG environment variable.
 
   attr_accessor :spell_language
+
+  ##
+  # The minimum length of a word for spell checking.
+
+  attr_accessor :spell_minimum_word_length
 
   ##
   # The directory spellcheck was run from which contains all the source files.

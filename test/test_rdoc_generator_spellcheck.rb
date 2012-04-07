@@ -18,6 +18,7 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     @SC = RDoc::Generator::Spellcheck
     @options = RDoc::Options.new
     @options.spell_language = 'en_US'
+    @options.spell_minimum_word_length = 3
 
     @sc = @SC.new @options
 
@@ -61,8 +62,10 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
     refute                options.spell_add_words
     refute                options.spell_aggregate_all
+    assert_equal 4,       options.spell_minimum_word_length
     assert_equal 'en_US', options.spell_language
     assert_equal Dir.pwd, options.spell_source_dir
+
     assert                options.quiet
   ensure
     ENV['LANG'] = orig_lang
@@ -137,6 +140,18 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
     assert_equal 'en_GB', options.spell_language
   end
 
+  def test_class_setup_options_spell_minimum_word_length
+    options = RDoc::Options.new
+
+    options.parse %w[
+      --format spellcheck
+      --no-ignore-invalid
+      --spell-minimum-word-length 5
+    ]
+
+    assert_equal 5, options.spell_minimum_word_length
+  end
+
   def test_initialize_add_words
     private_wordlist do
       @options.spell_add_words = %w[funkify thingus]
@@ -172,6 +187,17 @@ class TestRDocGeneratorSpellcheck < RDoc::TestCase
 
       assert_equal 'gud', word
       assert_equal 28,    offset
+    end
+  end
+
+  def test_find_misspelled_length
+    private_wordlist do
+      c = comment @text
+
+      @sc.minimum_word_length = 4
+      report = @sc.find_misspelled c
+
+      assert_empty report
     end
   end
 
