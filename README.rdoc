@@ -15,6 +15,21 @@ your own words to the default word list.
 * Checks documentation for pages, classes, modules, methods, constants, etc.
 * Prints a report showing each misspelled word and correction suggestions
 
+== Problems
+
+rdoc-spellcheck depends on aspell for which development has ceased despite
+messages to the contrary.  I've submitted two pull requests to the
+hunspell-ffi gem that should allow it to become a usable replacement for the
+raspell gem.  (The currently released hunspell-ffi does not appear to support
+private or session dictionaries.)
+
+For some projects it seems there are too many false positives for names and
+programming words.  I've reduced this somewhat by automatically including many
+programming words in the session dictionary.  One solution involves switching
+to hunspell which appears to have better-maintained word dictionaries.  The
+other involves exploring an upper threshold for the edit distance between a
+given word and its suggestion.
+
 == Synopsis
 
   $ rdoc -f spellcheck lib *.rdoc
