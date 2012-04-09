@@ -1,8 +1,8 @@
 = rdoc-spellcheck
 
-home :: https://github.com/drbrain/rdoc-spellcheck
+home :: https://github.com/rdoc/rdoc-spellcheck
 rdoc :: http://docs.seattlerb.org/rdoc-spellcheck
-bugs :: https://github.com/drbrain/rdoc-spellcheck/issues
+bugs :: https://github.com/rdoc/rdoc-spellcheck/issues
 
 == Description
 
